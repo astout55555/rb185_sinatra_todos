@@ -1,14 +1,11 @@
 <ul id="lists">
-  <%#
-    This is how I can comment out code...
-    However, I can't seem to comment out any code that includes embedded ruby,
-    unless I escape the special tags like this `\%\>` to avoid ending comment. 
-  %>
-  <% sort_and_display(@lists) do |list| %>
-    <li class=<%= list_class(list) %>>
+  <% sort_lists(@lists) do |list| %>
+    <li class="<%= list_class(list) %>">
       <a href="/lists/<%= list[:id] %>">
         <h2><%= list[:name] %></h2>
-        <p><%= todos_remaining_count(list) %>/<%= list[:todos].size %></p>
+        <p>
+          <%= todos_remaining_count(list) %> / <%= todos_count(list) %>
+        </p>
       </a>
     </li>
   <% end %>
