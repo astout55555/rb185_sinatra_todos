@@ -5,10 +5,7 @@ gem "sinatra", "~>1.4.7"
 gem "sinatra-contrib"
 gem "erubis"
 gem "pg"
-gem "pry-byebug"
-
-gem "webrick"
 
 group :production do
-  gem "puma", "~> 4.3.12"
+  gem "puma"
 end
