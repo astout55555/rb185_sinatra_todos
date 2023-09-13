@@ -3,7 +3,7 @@ CREATE TABLE lists(
   name varchar(255) NOT NULL UNIQUE
 );
 
-CREATE TABLE todo(
+CREATE TABLE todos(
   id serial PRIMARY KEY,
   name varchar(255) NOT NULL,
   completed boolean NOT NULL DEFAULT false,
