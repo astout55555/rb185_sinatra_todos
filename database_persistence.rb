@@ -15,21 +15,37 @@ class DatabasePersistence
   end
 
   def find_list(id)
-    sql = "SELECT * FROM lists WHERE id = $1"
+    sql = <<~SQL
+      SELECT lists.*,
+        count(NULLIF(todos.completed, true)) AS "todos_remaining_count",
+        count(todos.id) AS "todos_count"
+      FROM lists
+        LEFT JOIN todos
+          ON todos.list_id = lists.id
+      WHERE lists.id = $1
+      GROUP BY lists.id
+      ORDER BY lists.name;
+    SQL
     result = query(sql, id)
 
-    tuple = result.first
-    list_id = tuple["id"].to_i
-    {id: list_id, name: tuple["name"], todos: populate_todos(list_id)}
+    tuple_to_list_hash(result.first)
   end
 
   def all_lists
-    sql = "SELECT * FROM lists"
+    sql = <<~SQL
+      SELECT lists.*,
+        count(NULLIF(todos.completed, true)) AS "todos_remaining_count",
+        count(todos.id) AS "todos_count"
+      FROM lists
+        LEFT JOIN todos
+          ON todos.list_id = lists.id
+      GROUP BY lists.id
+      ORDER BY lists.name;
+    SQL
     result = query(sql)
 
     result.map do |tuple|
-      list_id = tuple["id"].to_i
-      {id: list_id, name: tuple["name"], todos: populate_todos(list_id)}
+      tuple_to_list_hash(tuple)
     end
   end
 
@@ -68,13 +84,6 @@ class DatabasePersistence
     query(sql, list_id)
   end
 
-  private
-
-  def query(statement, *params)
-    @logger.info "#{statement}: #{params}"
-    @db.exec_params(statement, params)
-  end
-
   def populate_todos(list_id)
     sql = "SELECT * FROM todos WHERE list_id = $1"
     result = query(sql, list_id.to_i)
@@ -84,5 +93,19 @@ class DatabasePersistence
         completed: tuple["completed"] == 't',
         list_id: tuple["list_id"] }
     end
+  end
+
+  private
+
+  def query(statement, *params)
+    @logger.info "#{statement}: #{params}"
+    @db.exec_params(statement, params)
+  end
+
+  def tuple_to_list_hash(tuple)
+    { id: tuple["id"].to_i,
+      name: tuple["name"],
+      todos_count: tuple["todos_count"].to_i,
+      todos_remaining_count: tuple["todos_remaining_count"].to_i }
   end
 end
